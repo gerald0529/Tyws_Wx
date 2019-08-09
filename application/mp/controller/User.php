@@ -172,6 +172,87 @@ class User
         }
     }
 
+
+    //我的账户
+    public function account(){
+
+        if(!(Request::instance()->has('openid','post'))){
+            return;
+        }
+
+        $aPost = Request::instance()->post();
+        $sOpenId = $aPost['openid'];
+
+        if(($sOpenId == '')) return;
+
+        $result = Db::table('customerinformation')
+            ->where('WxOpenID', $sOpenId)->select();
+        return $result;
+    }
+
+
+    //账户流水
+    public function ls(){
+        return 22;
+        if(!(Request::instance()->has('openid','post'))){
+            return;
+        }
+
+        $aPost = Request::instance()->post();
+        $sOpenId = $aPost['openid'];
+
+        if(($sOpenId == '')) return;
+
+        $result =array();
+        $result = Db::table('customerinformation')
+            ->where('WxOpenID', $sOpenId)->select();
+
+        $res = Db::table('Wxpayorder')
+            ->alias('w')
+            ->join('customerinformation c','c.WxOpenID = w.openid','left')
+            ->where('w.openid', $sOpenId)
+            ->field('w.id,order_type, w.messageid, w.body,w.out_trade_no,w.total_fee,w.time_end,w.refund_state,w.detail,c.NickName')
+            ->order('w.time_end desc')
+            ->select();
+
+        foreach($res as $v){
+            $result[] = array(
+                'body'			=> $v['body'],
+                'out_trade_no'	=> $v['out_trade_no'],
+                'total_fee'		=> $v['total_fee'],
+                'time_end'		=> $v['time_end'],
+                'pay'			=> true,
+                'messageid'		=> $v['messageid'],
+                'type'			=> $v['order_type'],
+                'refund_state'	=> $v['refund_state'],
+                'detail'	=> $v['detail']
+            );
+        }
+
+        return $result;
+    }
+
+
+    //账户充值
+    public function topup(){
+
+        if(!(Request::instance()->has('openid','post'))){
+            return;
+        }
+
+        $aPost = Request::instance()->post();
+        $sOpenId = $aPost['openid'];
+
+        if(($sOpenId == '')) return;
+
+        $result = Db::table('Receivables')
+            ->field('id,vrid,uselen,starttime,endtime,amountmoney')
+            ->where('WxOpenID', $sOpenId)->select();
+        return $result;
+    }
+
+
+
     public function watchs(){
         if(!(Request::instance()->has('openid','post'))){
             return;

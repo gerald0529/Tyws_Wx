@@ -160,7 +160,10 @@ class Pay
 
     public function notify(){
         //响应微信支付平台回调
+
         $raw_xml = file_get_contents("php://input");
+        //$numbytes = file_put_contents(time().'.txt', 'aaa');
+
         \Think\Log::write('微信APP支付成功:'.$raw_xml, 'INFO');
         $aNotify = json_decode(json_encode(simplexml_load_string($raw_xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
 
@@ -200,6 +203,7 @@ class Pay
     }
 
     function updateOrder($aOrder){
+
         $aOrder['state'] = 1;
         $aOrder['total_fee'] = $aOrder['total_fee']/100;
         //print_r($aOrder);
@@ -213,14 +217,23 @@ class Pay
             return false;
         }
         else{
+            $numbytes = file_put_contents(time().'.txt', $res);
             if($res>0){
+
                 //更新成功
                 if($aOrder['attach']=='用户主动充押金'){
+
                     //如果是充押金，同步更新用户账户余额
                     \Think\Log::write('aOrder[attach]:'.$aOrder['attach'].($aOrder['attach']=='用户主动充押金'), 'INFO');
                     $this->updateDeposit($aOrder['openid'], $aOrder['total_fee'], $aOrder['out_trade_no']);
                     return true;
-                } else {
+                } elseif($aOrder['attach']=='用户余额充值'){
+
+                    \Think\Log::write('aOrder[attach]:'.$aOrder['attach'].($aOrder['attach']=='用户余额充值'), 'INFO');
+                    $this->updateDeposit2($aOrder['openid'], $aOrder['total_fee'], $aOrder['out_trade_no']);
+                    return true;
+                }else {
+
                     //消费付款
                     //更新用户表
                     $aCustomer1['state'] = 1;
@@ -240,6 +253,7 @@ class Pay
                 }
             }
             else{
+
                 //未更新
                 return false;
             }
@@ -265,6 +279,32 @@ class Pay
         Db::table('Customerinformation')
             ->where('WxOpenID', $sOpenId)
             ->update($aCustomer);
+    }
+
+    //用户余额充值
+    function updateDeposit2($sOpenId, $iDeposit, $sOutTradeNo){
+        //获取当前用户账户余额
+        //$deposit = $Data->where($aWhere)->getField('deposit');
+
+        $balance = Db::table('Customerinformation')
+            ->where('WxOpenID', $sOpenId)
+            ->value('balance');
+
+        //累加余额
+        $aCustomer['balance'] = $balance+$iDeposit;
+        $aCustomer['balancetime'] = date('Y-m-d H:i:s');
+
+        //状态
+        $aCustomer['state'] = 1;
+        $aCustomer['PaymentType'] = 1;
+        $aCustomer['PaymentID'] = $sOutTradeNo;
+        $aCustomer['PaymentTotalFee'] = $aCustomer['balance'];
+        $aCustomer['PaymentTime'] = date('Y-m-d H:i:s');
+        //$numbytes = file_put_contents("./".time().'.txt', $aCustomer);
+        $v=Db::table('Customerinformation')
+            ->where('WxOpenID', $sOpenId)
+            ->update($aCustomer);
+
     }
 
     //检测是否允许退款
