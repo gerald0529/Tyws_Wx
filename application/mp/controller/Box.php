@@ -35,6 +35,7 @@ class Box
         return $result;
     }
 
+    //获取柜子的箱门情况
     public function getvr()
     {
 
@@ -100,6 +101,7 @@ class Box
         }
     }
 
+    //检查柜子是否有空格子
     public function returnvr()
     {
         if (!(Request::instance()->has('openid', 'post'))
@@ -158,7 +160,7 @@ class Box
         }
     }
 
-
+    //检查正在使用的vr的情况
     public function inuse()
     {
         if (!(Request::instance()->has('openid', 'post'))) {
@@ -171,13 +173,13 @@ class Box
         if ($sOpenId == '') {
             return;
         }
-
+        //查找未支付的柜子
         $data = Db::table('receivables')->field('vrid,starttime,endtime')
             ->where('WxOpenID', $sOpenId)
             ->where('PaymentSituation', '0')
             ->where('EndTime', 'null')
             ->select();
-
+        //统计总数，以及返回VR使用时长的数组
         if (count($data)) {
             return array(
                 'result' => 'SUCCESS',
@@ -217,6 +219,7 @@ class Box
 
     }
 
+    //管理员打开箱子门（取VR）
     public function adminget()
     {
         if (!(Request::instance()->has('openid', 'post'))
@@ -237,7 +240,7 @@ class Box
                 'msg' => '此柜有箱门已被其他用户打开，请等待使用完闭关好所有门再试！'
             );
         }
-
+        //修改箱子信息里对应的VR为信息为空（0）
         $this->adminUpdateBox($sStorgeId, $sBoxId, '', $sOpenId);
 
 
@@ -251,6 +254,7 @@ class Box
         $data['state'] = 0;
 		$data['type'] = 3;
 
+        //添加取出操作记录信息
         $sInsertId = Db::table('commessageorder')->insertGetId($data);
 
         if (count($sInsertId)) {
@@ -266,6 +270,7 @@ class Box
         }
     }
 
+    //管理员发出操作指令——存或全开
     public function adminsave()
     {
         if (!(Request::instance()->has('openid', 'post'))
@@ -288,6 +293,7 @@ class Box
                 'msg' => '此柜有箱门已被其他用户打开，请等待使用完闭关好所有门再试！'
             );
         }
+        //修改箱子信息里对应的VR为信息，存入VR的ID
         $this->adminUpdateBox($sStorgeId, $sBoxId, $sVRId, $sOpenId);
 
         $data = array();
@@ -300,6 +306,7 @@ class Box
         $data['state'] = 0;
 		$data['type'] = 4;
 
+		//添加存入操作记录信息
         if (count(Db::table('commessageorder')->insertGetId($data))) {
             return array(
                 'result' => 'SUCCESS',
@@ -351,6 +358,7 @@ class Box
 
     }
 
+    //检查格子的指令状态
     public function checkcommand()
     {
         $bState = 'FAIL';
@@ -384,6 +392,7 @@ class Box
 
     }
 
+    //检查格子对象
     function checkBoxUser($sStorgeId)
     {
         $data = Db::table('boxinformation')
@@ -399,6 +408,7 @@ class Box
 
     }
 
+    //检查柜子的在线状态
     function checkStorgeOnline($sStorgeId)
     {
         $data = Db::table('hotelinformation')
@@ -468,6 +478,7 @@ class Box
             ]);
     }
 
+    //管理员更改格子里的VR状态
     function adminUpdateBox($sStorgeId, $sBoxId, $sVRId, $sWxOpenId)
     {
         Db::table('boxinformation')
@@ -482,6 +493,7 @@ class Box
             ]);
     }
 
+    //检查归还情况
     public function checkreturn()
     {
         $sOpenId = Request::instance()->post('openid');

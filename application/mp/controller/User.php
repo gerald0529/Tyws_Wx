@@ -32,7 +32,7 @@ class User
     }
 	
 	public function info(){
-		//获取用户信息
+		//获取用户信息1
         if(!(Request::instance()->has('openid','post'))){
             return;
         }
@@ -193,7 +193,7 @@ class User
 
     //账户流水
     public function ls(){
-        return 22;
+        //return 22;
         if(!(Request::instance()->has('openid','post'))){
             return;
         }
