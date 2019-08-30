@@ -392,7 +392,7 @@ class Box
 
     }
 
-    //检查格子对象
+    //检查已使用的格子对象
     function checkBoxUser($sStorgeId)
     {
         $data = Db::table('boxinformation')

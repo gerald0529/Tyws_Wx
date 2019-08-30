@@ -44,8 +44,6 @@ class User
 		if((Request::instance()->has('unionid','post'))){
             $sUnionId = $aPost['unionid'];
         }
-		
-		
 
         if(($sOpenId == '')) return;
 
@@ -67,12 +65,13 @@ class User
 				Db::table('customerinformation')->where('WxOpenID', $sOpenId)->update($source);
 			}
 			
-			$record = Db::table('customerinformation')->field('isadmin,deposit,state,phonenumber,vrid,errordoor')->where($where)->select();
+			$record = Db::table('customerinformation')->field('isadmin,deposit,balance,state,phonenumber,vrid,errordoor')->where($where)->select();
 			$result['isDep'] = $record[0]['deposit']>0?true:false;
             $result['isAdmin'] = $record[0]['isadmin']?true:false;
 			$result['minDeposit'] = $sMinDeposit;
 			$result['depositLockTime'] = $sDepositLockTime;
 			$result['deposit'] = $record[0]['deposit'];
+            $result['balance'] = $record[0]['balance'];
             $result['vrid'] = $record[0]['vrid'] == null?'':$record[0]['vrid'];
 			$result['unitPrice'] = $sUnitPrice;
 			$result['phone'] = $record[0]['phonenumber'];
@@ -115,6 +114,13 @@ class User
             ->where('InPayment', 0)
             ->order('StartTime desc')
             ->select();//print_r($result);
+
+            //判断VR租用时长是否满一天，每过一天减免12元
+            $a =intval($result[0]['amountmoney']/32)*12; //减免金额
+            //$a =intval($result[0]['amountmoney']/10)*9.99;//测试
+            if($a>0){
+                $result[0]['amountmoney'] = $result[0]['amountmoney']-$a;
+            }
         if(count($result)){
             return $result[0];
         } else {
@@ -245,14 +251,16 @@ class User
 
         if(($sOpenId == '')) return;
 
-        $result = Db::table('Receivables')
+        /*$result = Db::table('Receivables')
             ->field('id,vrid,uselen,starttime,endtime,amountmoney')
+            ->where('WxOpenID', $sOpenId)->select();*/
+        $result = Db::table('customerinformation')
             ->where('WxOpenID', $sOpenId)->select();
         return $result;
     }
 
 
-
+    //租赁记录
     public function watchs(){
         if(!(Request::instance()->has('openid','post'))){
             return;
@@ -352,6 +360,7 @@ class User
         return $sState;
     }
 
+    //获取结算扣费表设置信息
     function getConfiguration(){
         $aConfig = array();
 
@@ -360,5 +369,20 @@ class User
             $aConfig[$res[$i]['key']] = $res[$i]['value'];
         }
         return $aConfig;
+    }
+
+    //常见问题获取
+    function getProblems(){
+
+        $data = Db::table('Comproblems')->where('isShow',0)->select();
+
+        if(!$data){
+            $data = array(
+                'code'			=> '404',
+                'data'=>'',
+                'msg'			=> 'FAIL'
+            );
+        }
+        return $data;
     }
 }

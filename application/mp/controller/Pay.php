@@ -196,7 +196,7 @@ class Pay
         //echo "success";
 
     }
-
+    //创建预支付信息
     function insertOrder($aOrder){
         Db::table('Wxpayorder')->insert($aOrder);
         return true;
@@ -470,7 +470,7 @@ class Pay
 
     }
 
-
+    //微信退款回调
     public function refundnotify(){
 
         $raw_xml = file_get_contents("php://input");
@@ -530,6 +530,7 @@ class Pay
 
     }
 
+    //获取最近一次的支付完成的时间
     function getLastPayTime($sOpenId){
         if($sOpenId == '') return false;
 
@@ -553,7 +554,7 @@ class Pay
         }
 
         $result = array();
-
+        //查询（已支付的、未申请退款的、充押金、最新的）的预支付信息的订单号和金额
         $res = Db::table('Wxpayorder')->field('out_trade_no,total_fee,time_end')
             ->where('openid', $sOpenId)
             ->where('state', 1)
@@ -574,15 +575,16 @@ class Pay
         return $result;
     }
 
+    //清除押金
     function clearDeposit($sOpenId, $sOutRefundNo, $sTotalFee){
         if($sOpenId == ''){
             return false;
         }
 
         //状态
-        $aCustomer['state'] = 0;
-        $aCustomer['deposit'] = 0;
-        $aCustomer['RefundType'] = 1;
+        $aCustomer['state'] = 0;   //无押金
+        $aCustomer['deposit'] = 0;  //押金金额
+        $aCustomer['RefundType'] = 1;   //退款方式
         $aCustomer['RefundID'] = $sOutRefundNo;
         $aCustomer['RefundTotalFee'] = $sTotalFee;
         $aCustomer['RefundTime'] = date('Y-m-d H:i:s');
@@ -592,6 +594,7 @@ class Pay
             ->update($aCustomer);
     }
 
+    //获取Configuration表信息
     function getConfiguration(){
         $aConfig = array();
 
