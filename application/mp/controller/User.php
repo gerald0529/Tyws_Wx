@@ -115,13 +115,15 @@ class User
             ->order('StartTime desc')
             ->select();//print_r($result);
 
+
+        if(count($result)){
+
             //判断VR租用时长是否满一天，每过一天减免12元
             $a =intval($result[0]['amountmoney']/32)*12; //减免金额
             //$a =intval($result[0]['amountmoney']/10)*9.99;//测试
             if($a>0){
                 $result[0]['amountmoney'] = $result[0]['amountmoney']-$a;
             }
-        if(count($result)){
             return $result[0];
         } else {
             return array(
@@ -384,5 +386,39 @@ class User
             );
         }
         return $data;
+    }
+
+    //检查归还后是否有未支付订单需要支付
+    function checkreturn2(){
+        $sOpenId = Request::instance()->post('openid');
+        //$sStorgeId = Request::instance()->post('storgeid');
+        if ( $sOpenId == '') {
+            return array(
+                'result' => 'FAIL',
+                'state' => '1',
+                'msg' => 'data error'
+            );
+        }
+
+            $result0 = Db::table('receivables')
+                ->where('EndTime', null)
+                ->where('WxOpenID', $sOpenId)
+                ->where('PaymentSituation', 0)
+                ->limit(1)
+                ->select();
+
+            if (count($result0)) {
+                return array(
+                    'result' => 'SUCCESS',
+                    'state' => 0, //可以付款
+                    'msg' => ''
+                );
+            } else {
+                return array(
+                    'result' => 'FAIL',
+                    'state' => '1',
+                    'msg' => '---'
+                );
+            }
     }
 }

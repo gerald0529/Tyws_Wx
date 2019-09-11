@@ -48,6 +48,7 @@ class Box
         $sOpenId = $aPost['openid'];
         $sStorgeId = $aPost['storgeid'];
 
+        //检查可用的柜子
         if (!$this->checkStorgeOnline($sStorgeId)) {
             return array(
                 'result' => 'FAIL',
@@ -56,7 +57,7 @@ class Box
             );
         }
 
-
+        //检查未被他人占用的，可用的箱子
         if ($this->checkBoxUser($sStorgeId)) {
             return array(
                 'result' => 'FAIL',
@@ -65,7 +66,7 @@ class Box
             );
         }
 
-
+        //获取有设备的格子,Equipment==1
         $aBox = $this->getFullBoxByStorgeId($sStorgeId);
 
 
@@ -113,7 +114,7 @@ class Box
         $sOpenId = $aPost['openid'];
         $sStorgeId = $aPost['storgeid'];
 
-
+        //检查柜子是否在线
         if (!$this->checkStorgeOnline($sStorgeId)) {
             return array(
                 'result' => 'FAIL',
@@ -122,6 +123,7 @@ class Box
             );
         }
 
+        //检查未被他人占用的，可用的箱子
         if ($this->checkBoxUser($sStorgeId)) {
             return array(
                 'result' => 'FAIL',
@@ -130,6 +132,7 @@ class Box
             );
         }
 
+        //获取Equipment=0的空格子
         $aBox = $this->getFreeBoxByStorgeId($sStorgeId);
 
 
@@ -432,7 +435,7 @@ class Box
 
         if (count($aBox)) {
             foreach ($aBox as $k => $v) {
-                if ($v['Equipment'] == 0) {
+                if ($v['Equipment'] == 0 ) {
                     return $v;
                 }
             }
@@ -516,11 +519,11 @@ class Box
         if (count($result)) {
 
             if($result[0]['opencount']==3){
-                return array(
-                    'result' => 'ERROR',
-                    'state' => '1',
-                    'msg' => '归还VR失败:VR未正确连接数据线，请联系客户处理！(oc=3)'
-                );
+                    return array(
+                        'result' => 'ERROR',
+                        'state' => '1',
+                        'msg' => '归还VR失败:VR未正确连接数据线，请联系客户处理！(oc=3)'
+                    );
             }
 
 
